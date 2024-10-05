@@ -33,8 +33,10 @@
 
 
 
-char countValue = 0;
+char countValueA = 0;
+char countValueB = 0;
 char currentPortBVal;
+char currentPortAVal;
 void main(){
     unsigned int counter_value=100000000; // interrupt every second @ 100MHz
     *CTCON = BIT1; //stop timer if running
@@ -69,7 +71,20 @@ void main(){
         if(~*PBIN & switch != 0){
             // waiting for release
             while(~*PBIN & switch != 0);
-            // do led things.
+            // temporary variable to ensure LED are never on or off at the same time.
+            char temp = *PAOUT;
+            // check if LED1 is on
+            if(*PAOUT & LED1 != 0){ //meaning LED1 is on
+                //Turn LED2 on and LED1 off
+                temp |= LED2; //turn led 2 on
+                temp &= ~LED1; //turn led 1 off
+                *PAOUT = temp; // update PAOUT with new LED config 
+            }else{
+                //Turn LED1 on and LED2 off
+                temp |= LED1; //turn led 1 on
+                temp &= ~LED2; //turn led 2 off
+                *PAOUT = temp; // update PAOUT with new LED config 
+            }
         }    
     }  
 
@@ -78,17 +93,32 @@ void main(){
 // interrupt for timer
 interrupt void intserv()
 {
-    if(countValue == 9){
-        countValue = 0;
-    } else{
-        countValue++;
+    // if led 1 is on, digit 1 is decremented
+    if(*PAOUT & LED1 != 0){
+        // if value is 0, set it to 10
+        countValueA = countValueA >= 0 ? 10 : countValueA;
+        countValueA--;
+        // save port B value so new value can be loaded in one go
+        currentPortAVal = *PAOUT;
+        // clear current value
+        currentPortAVal &= ~displayBits;
+        // update with new values and upload to port B
+        currentPortAVal |= countValueB;
+        *PBOUT = currentPortAVal;  
     }
-    // load value into counter
-    //shift value by 4 bits
-    countValue= countValue <<4;
-    // save port B value so new value can be loaded in one go
-    currentPortBVal = *PBOUT;
-    currentPortBVal &= ~displayBits;
-    currentPortBVal |= countValue;
-    *PBOUT = currentPortBVal;  
+    else if(*PAOUT & LED2 != 0){ // decrement digit 2
+        countValueB = countValueB >= 0 ? 10 : countValueB;
+        countValueB--;
+
+        // load value into counter
+        //shift value by 4 bits
+        countValueB= countValueB << 4;
+        // save port B value so new value can be loaded in one go
+        currentPortBVal = *PBOUT;
+        // clear current value
+        currentPortBVal &= ~displayBitsB;
+        // update with new values and upload to port B
+        currentPortBVal |= countValueB;
+        *PBOUT = currentPortBVal;  
+    }
 }
