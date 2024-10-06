@@ -66,6 +66,10 @@ void main(){
     asm("MoveControl PSR, #0x20");
     // Enable counter interrupt
     *CTCON |= BIT4;
+
+    // Enable timer
+    *CTCON &= ~BIT1; //clear stop bit
+    *CTCON |= BIT0; //enable start bit
     while(1){
         // PBIN will read a 0 when on
         if(~*PBIN & switch != 0){
