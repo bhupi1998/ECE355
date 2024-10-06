@@ -113,16 +113,16 @@ interrupt void intserv()
     else if(*PAOUT & LED2 != 0){ // decrement digit 2
         countValueB = countValueB >= 0 ? 10 : countValueB;
         countValueB--;
-
+        char temp;
         // load value into counter
         //shift value by 4 bits
-        countValueB= countValueB << 4;
+        temp = countValueB << 4;
         // save port B value so new value can be loaded in one go
         currentPortBVal = *PBOUT;
         // clear current value
         currentPortBVal &= ~displayBitsB;
         // update with new values and upload to port B
-        currentPortBVal |= countValueB;
+        currentPortBVal |= temp;
         *PBOUT = currentPortBVal;  
     }
 }

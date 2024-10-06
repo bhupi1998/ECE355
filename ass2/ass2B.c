@@ -34,8 +34,8 @@
 #define LED1 BIT2
 #define LED2 BIT0
 
-char countValueA = 0;
-char countValueB = 0;
+char countValue1 = 0;
+char countValue2 = 0;
 char currentPortBVal;
 char currentPortAVal;
 
@@ -43,7 +43,7 @@ char currentPortAVal;
 interrupt void intserv();
 // bit used to enable the increment
 char countEnable = 0;
-
+char switchPressed = 0;
 void main(){
     unsigned int counter_value=100000000; // interrupt every second @ 100MHz
     *CTCON = BIT1; //stop timer if running
@@ -66,12 +66,16 @@ void main(){
     *PBOUT &= ~DIGIT2;
     *PAOUT &= ~DIGIT1;
 
+    //Initialize LEDs
+    *PBOUT |= LED1;
+    *PBOUT &= ~LED2;
+
     //Enable interrupt PSR[6]
     asm("MoveControl PSR, #0x20");
     //Enable port A in interrupt
     *PCONT |= BIT4;
 
-        // Enable timer
+    // Enable timer
     *CTCON &= ~BIT1; //clear stop bit
     *CTCON |= BIT0; //enable start bit
     char timerVal = 0;
@@ -79,11 +83,25 @@ void main(){
         while(((*CTSTAT & BIT0) == 0)){}; //wait for count to be done
             // if LED1 is on, increment digit1
             if((*PBOUT & LED1) == 1){
-
+                countValue1++;
+                countValue1 = countValue1 >= 10 ? 0 : countValue1;
+                char temp;
+                temp = countValue1 << 3;
+                currentPortAVal = *PAOUT;
+                currentPortAVal &= ~DIGIT1;
+                currentPortAVal |= temp;
+                *PAOUT = currentPortAVal; 
             }
             // if LED2 is on, increment digit2
             if((*PBOUT & LED2) == 1){
-
+                countValue2++;
+                countValue2 = countValue2 >= 10 ? 0 : countValue2;
+                char temp;
+                temp = countValue2 << 4;
+                currentPortBVal = *PBOUT;
+                currentPortBVal &= ~DIGIT2;
+                currentPortBVal |= temp;
+                *PBOUT = currentPortBVal; 
             }
             // Counter reloads automatically based on page 398 of textbook
 
@@ -95,6 +113,25 @@ void main(){
 // interrupt for timer
 interrupt void intserv()
 {
-    if((*PAIN & SWITCH) != 0){
-
+    // if switch is pressed 
+    if(((*PAIN & SWITCH) == 0) && ~switchPressed){
+        switchPressed = 1;
+    }else if(((*PAIN & SWITCH) != 0) && switchPressed){
+        switchPressed = 0;
+        char temp;
+        // LED1 is on
+            if(*PAOUT & LED1 != 0){ //meaning LED1 is on
+                temp = *PAOUT;
+                //Turn LED2 on and LED1 off
+                temp |= LED2; //turn led 2 on
+                temp &= ~LED1; //turn led 1 off
+                *PAOUT = temp; // update PAOUT with new LED config 
+            }else{
+                temp = *PAOUT;
+                //Turn LED1 on and LED2 off
+                temp |= LED1; //turn led 1 on
+                temp &= ~LED2; //turn led 2 off
+                *PAOUT = temp; // update PAOUT with new LED config 
+            }
+    }
 }
