@@ -1,0 +1,48 @@
+!SESSION 2024-10-08 21:39:47.779 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -os linux -ws gtk -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2024-10-08 21:40:19.838
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2024-10-08 21:40:19.839
+!MESSAGE Log4j2 initialized with config file /home/bp/Documents/github/ECE355/Labs/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2024-10-08 21:40:21.971
+!MESSAGE Started RMI Server, listening on port 41337
+!SESSION 2024-10-08 23:08:06.236 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -os linux -ws gtk -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2024-10-08 23:08:11.355
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2024-10-08 23:08:11.356
+!MESSAGE Log4j2 initialized with config file /home/bp/Documents/github/ECE355/Labs/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2024-10-08 23:08:13.173
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2024-10-08 23:14:02.870
+!MESSAGE Indexed 'Lab1' (19 sources, 81 headers) in 1.45 sec: 4,135 declarations; 22,987 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0074%)
+!SESSION 2024-10-08 23:19:17.303 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -os linux -ws gtk -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2024-10-08 23:19:21.725
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2024-10-08 23:19:21.726
+!MESSAGE Log4j2 initialized with config file /home/bp/Documents/github/ECE355/Labs/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2024-10-08 23:19:25.311
+!MESSAGE Started RMI Server, listening on port 41337
