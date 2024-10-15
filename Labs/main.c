@@ -16,6 +16,7 @@
 #include "diag/Trace.h"
 #include "cmsis/cmsis_device.h"
 
+
 // ----------------------------------------------------------------------------
 //
 // STM32F0 empty sample (trace via $(trace)).
@@ -53,7 +54,7 @@ void myEXTI_Init(void);
 
 // Declare/initialize your global variables here...
 // NOTE: You'll need at least one global variable
-// (say, timerTriggered = 0 or 1) to indicate 
+// (say, timerTriggered = 0 or 1) to indicate
 // whether TIM2 has started counting or not.
 
 
@@ -126,12 +127,12 @@ void myGPIOA_Init()
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
 	/* Configure PA2 as input */
 	// Relevant register: GPIOA->MODER
-    // GPIO_MODER_MODER2 = 110000
+    // GPIO_MODER_MODER2 = 00110000
     GPIOA->MODER &= ~(GPIO_MODER_MODER2);
 	/* Ensure no pull-up/pull-down for PA2 */
     // set to 00 for no pull ups
 	// Relevant register: GPIOA->PUPDR
-    GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR2); 
+    GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR2);
 }
 
 
@@ -151,19 +152,18 @@ void myTIM2_Init()
 	/* Set auto-reloaded delay */
 	TIM2->ARR = myTIM2_PERIOD;
 
-    // !!!I just copied the following from the slides!!!
 	/* Update timer registers */
 	// Relevant register: TIM2->EGR
     TIM2->EGR = ((uint16_t)0x0001);
 	/* Assign TIM2 interrupt priority = 0 in NVIC */
-    NVIC_SetPriority(TIM2_IRQn, 0);
 	// Relevant register: NVIC->IP[3], or use NVIC_SetPriority
-
+    NVIC_SetPriority(TIM2_IRQn, 0);
 	/* Enable TIM2 interrupts in NVIC */
 	// Relevant register: NVIC->ISER[0], or use NVIC_EnableIRQ
-
+    NVIC_EnableIRQ(TIM2_IRQn);
 	/* Enable update interrupt generation */
 	// Relevant register: TIM2->DIER
+    TIM2->DIER |= TIM_DIER_UIE;
 }
 
 
@@ -171,20 +171,24 @@ void myEXTI_Init()
 {
 	/* Map EXTI2 line to PA2 */
 	// Relevant register: SYSCFG->EXTICR[0]
-
+	SYSCFG->EXTICR[0] &= ~(0xF<<8) ;
 	/* EXTI2 line interrupts: set rising-edge trigger */
 	// Relevant register: EXTI->RTSR
-
+	EXTI->RTSR |= EXTI_RTSR_TR2; // enable rising edge for PA2
 	/* Unmask interrupts from EXTI2 line */
 	// Relevant register: EXTI->IMR
-
+	// set EXTI IMR bit 2 (...43210) to 1 to unmask
+	EXTI->IMR |= EXTI_IMR_MR2;
 	/* Assign EXTI2 interrupt priority = 0 in NVIC */
 	// Relevant register: NVIC->IP[2], or use NVIC_SetPriority
-
+	// set timer2 priority to 0 (highest priority)
+	NVIC_SetPriority(TIM2_IRQn, 0);
 	/* Enable EXTI2 interrupts in NVIC */
 	// Relevant register: NVIC->ISER[0], or use NVIC_EnableIRQ
-}
+	//interrupt set enable register -> EXTI2 (bit 6) -> 1 enables
+	NVIC_EnableIRQ(EXTI2_3_IRQn);
 
+}
 
 /* This handler is declared in system/src/cmsis/vectors_stm32f051x8.c */
 void TIM2_IRQHandler()
@@ -195,10 +199,11 @@ void TIM2_IRQHandler()
 		trace_printf("\n*** Overflow! ***\n");
 
 		/* Clear update interrupt flag */
-		// Relevant register: TIM2->SR
-
+		// Relevant register: TIM2->SR (status register, clear ^^Flag)
+		TIM2->SR &= ~(TIM_SR_UIF);
 		/* Restart stopped timer */
 		// Relevant register: TIM2->CR1
+		TIM2->CR1 |= TIM_CR1_CEN;
 	}
 }
 
@@ -207,30 +212,56 @@ void TIM2_IRQHandler()
 void EXTI2_3_IRQHandler()
 {
 	// Declare/initialize your local variables here...
-
+volatile unsigned int count=0;
+volatile float freq=0;
+volatile double period;
+static volatile int edge_flag=0;
 	/* Check if EXTI2 interrupt pending flag is indeed set */
 	if ((EXTI->PR & EXTI_PR_PR2) != 0)
 	{
 		//
 		// 1. If this is the first edge:
+		if(edge_flag == 0){
 		//	- Clear count register (TIM2->CNT).
+		TIM2->CNT = 0x0;
 		//	- Start timer (TIM2->CR1).
+		TIM2->CR1 |= (0x1);
+		// set edge flag to 1
+		edge_flag = 1;
 		//    Else (this is the second edge):
+		trace_printf("First Edge\n");
+		}else{
 		//	- Stop timer (TIM2->CR1).
+			TIM2->CR1 &= ~(0x1);
 		//	- Read out count register (TIM2->CNT).
+			count = TIM2->CNT;
 		//	- Calculate signal period and frequency.
+			period = (double)count / (double)SystemCoreClock;
+			freq = 1/period;
 		//	- Print calculated values to the console.
 		//	  NOTE: Function trace_printf does not work
-		//	  with floating-point numbers: you must use 
+		//	  with floating-point numbers: you must use
 		//	  "unsigned int" type to print your signal
 		//	  period and frequency.
-		//
+			trace_printf("Period is: %u Hz\n", (int) period);
+			trace_printf("Second Edge\n");
+
+
+			period=0;
+			freq=0;
+			// clear flag to prepare for next period
+			edge_flag = 0;
+
+		}
 		// 2. Clear EXTI2 interrupt pending flag (EXTI->PR).
 		// NOTE: A pending register (PR) bit is cleared
 		// by writing 1 to it.
-		//
+		EXTI->PR |= EXTI_PR_PR2;
+
+
+		}
 	}
-}
+
 
 
 #pragma GCC diagnostic pop
