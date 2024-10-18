@@ -16,7 +16,7 @@
 #include "diag/Trace.h"
 #include "cmsis/cmsis_device.h"
 
-	static volatile int edge_flag=0;
+volatile int edge_flag=0;
 
 // ----------------------------------------------------------------------------
 //
@@ -215,9 +215,9 @@ void TIM2_IRQHandler()
 void EXTI2_3_IRQHandler()
 {
 	// Declare/initialize your local variables here...
-volatile unsigned int count=0;
- float freq=0;
- float period=0;
+	volatile unsigned int count=0; // variable to save counter value
+	float freq, period;
+
 
 	/* Check if EXTI2 interrupt pending flag is indeed set */
 	if ((EXTI->PR & EXTI_PR_PR2) != 0)
@@ -227,37 +227,32 @@ volatile unsigned int count=0;
 		if(edge_flag == 0){
 			// set edge flag to 1
 			edge_flag = 1;
-		//	- Clear count register (TIM2->CNT).
-		TIM2->CNT = 0x0;
-		//	- Start timer (TIM2->CR1).
-		TIM2->CR1 |= (0x1);
+			//	- Clear count register (TIM2->CNT).
+			TIM2->CNT = 0x0;
+			//	- Start timer (TIM2->CR1).
+			TIM2->CR1 |= (0x1);
 
 		//    Else (this is the second edge):
-		}else{
-
-		//	- Stop timer (TIM2->CR1).
+		} else
+		{
+			//	- Stop timer (TIM2->CR1).
 			TIM2->CR1 &= ~(0x1);
 
 			// clear flag to prepare for next period
 			edge_flag = 0;
 
-		//	- Read out count register (TIM2->CNT).
+			//	- Read out count register (TIM2->CNT).
 			count = TIM2->CNT;
-		//	- Calculate signal period and frequency.
+			//	- Calculate signal period and frequency.
 			period = (float)count / (float)SystemCoreClock;
 			freq = 1/period;
-		//	- Print calculated values to the console.
-		//	  NOTE: Function trace_printf does not work
-		//	  with floating-point numbers: you must use
-		//	  "unsigned int" type to print your signal
-		//	  period and frequency.
+			//	- Print calculated values to the console.
+			//	  NOTE: Function trace_printf does not work
+			//	  with floating-point numbers: you must use
+			//	  "unsigned int" type to print your signal
+			//	  period and frequency.
 			trace_printf("Period is: %f ms\n", (float) period*1000);
 			trace_printf("Freq is: %f kHz\n", (float) freq/1000);
-
-
-		//	period=0;
-		//	freq=0;
-
 
 		}
 		// 2. Clear EXTI2 interrupt pending flag (EXTI->PR).
