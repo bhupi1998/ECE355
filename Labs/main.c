@@ -18,6 +18,8 @@
 
 volatile int edge_flag=0;
 
+
+
 // ----------------------------------------------------------------------------
 //
 // STM32F0 empty sample (trace via $(trace)).
@@ -103,7 +105,7 @@ main(int argc, char* argv[])
 
 	SystemClock48MHz();
 
-	trace_printf("This is Part 2 of Introductory Lab...\n");
+	trace_printf("This is Part 2 of Introductory Lab by Micah And Bhupinder...\n");
 	trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
 	myGPIOA_Init();		/* Initialize I/O port PA */
@@ -151,7 +153,8 @@ void myTIM2_Init()
     TIM2->CR1 = ((uint16_t)0x008C);
 
 	/* Set clock prescaler value */
-	TIM2->PSC = myTIM2_PRESCALER;
+	TIM2->PSC = myTIM2_PRESCALER
+			;
 	/* Set auto-reloaded delay */
 	TIM2->ARR = myTIM2_PERIOD;
 
@@ -259,7 +262,6 @@ void EXTI2_3_IRQHandler()
 		// NOTE: A pending register (PR) bit is cleared
 		// by writing 1 to it.
 		EXTI->PR |= EXTI_PR_PR2;
-
 
 		}
 	}
