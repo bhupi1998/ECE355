@@ -16,7 +16,9 @@
 #include "diag/Trace.h"
 #include "cmsis/cmsis_device.h"
 
-volatile int edge_flag=0;
+volatile int edge_flag_FG=0;
+volatile int edge_flag_555=0;
+volatile int inSig = 1;  //default input from signal generator PB changes to 0 for 555 input
 
 
 
@@ -50,9 +52,11 @@ volatile int edge_flag=0;
 /* Maximum possible setting for overflow */
 #define myTIM2_PERIOD ((uint32_t)0xFFFFFFFF)
 
-void myGPIOA_Init(void);
+void myGPIOA_Init(void); //PA IO Setup
 void myTIM2_Init(void);
 void myEXTI_Init(void);
+
+
 
 
 // Declare/initialize your global variables here...
@@ -63,7 +67,7 @@ void myEXTI_Init(void);
 
 /*** Call this function to boost the STM32F0xx clock to 48 MHz ***/
 
-void SystemClock48MHz( void )
+ void SystemClock48MHz( void )
 {
 //
 // Disable the PLL
@@ -130,6 +134,19 @@ void myGPIOA_Init()
 	// Relevant register: RCC->AHBENR
     // This turns on the clock to PortA so that it's active
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+
+    //User button PA0 configuration
+	/* Configure PA0 as input */
+	GPIOA->MODER &= ~(GPIO_MODER_MODER0);
+	/* Ensure no pull-up/pull-down for PA0 */
+	GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR0);
+
+    // PA1 configuration - 555 timer
+	/* Configure PA1 as input */
+	GPIOA->MODER &= ~(GPIO_MODER_MODER1);
+	/* Ensure no pull-up/pull-down for PA1 */
+	GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR1);
+
 	/* Configure PA2 as input */
 	// Relevant register: GPIOA->MODER
     // GPIO_MODER_MODER2 = 00110000
@@ -138,6 +155,11 @@ void myGPIOA_Init()
     // set to 00 for no pull ups
 	// Relevant register: GPIOA->PUPDR
     GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR2);
+
+    //need PA 4 Analog output
+
+    //need PA 5 Analog input
+
 }
 
 
@@ -175,6 +197,8 @@ void myTIM2_Init()
 
 void myEXTI_Init()
 {
+	///EXTI2 SETUP
+	//EXTI2_3 SETUP (done for Lab 2)
 	/* Map EXTI2 line to PA2 */
 	// Relevant register: SYSCFG->EXTICR[0]
 	SYSCFG->EXTICR[0] &= ~(0xF<<8) ;
@@ -188,11 +212,43 @@ void myEXTI_Init()
 	/* Assign EXTI2 interrupt priority = 0 in NVIC */
 	// Relevant register: NVIC->IP[2], or use NVIC_SetPriority
 	// set timer2 priority to 0 (highest priority)
-	NVIC_SetPriority(TIM2_IRQn, 0);
+///CHANGED BELOW FROM "TIM2_IRQn" TO "EXTI2_3_IRQn" FOR THE PRIORITY SETTING
+	NVIC_SetPriority(EXTI2_3_IRQn, 0);
 	/* Enable EXTI2 interrupts in NVIC */
 	// Relevant register: NVIC->ISER[0], or use NVIC_EnableIRQ
 	//interrupt set enable register -> EXTI2 (bit 6) -> 1 enables
 	NVIC_EnableIRQ(EXTI2_3_IRQn);
+	///EXTI0 setup
+	//EXTI0_1 SETUP (done for Project)
+	/* Map EXTI0 line to PA0 */
+	// Relevant register: SYSCFG->EXTICR[0]
+	SYSCFG->EXTICR[0] &= ~(0xF) ;
+	/* EXTI0 line interrupts: set rising-edge trigger */
+	// Relevant register: EXTI->RTSR
+	EXTI->RTSR |= EXTI_RTSR_TR0; // enable rising edge for PA0
+	/* Unmask interrupts from EXTI2 line */
+	// Relevant register: EXTI->IMR
+	// set EXTI IMR bit 0 (...43210) to 1 to unmask
+	EXTI->IMR |= EXTI_IMR_MR0;
+	/* Assign EXTI2 interrupt priority = 0 in NVIC */
+	// Relevant register: NVIC->IP[2], or use NVIC_SetPriority
+	// set timer2 priority to 0 (highest priority)
+	NVIC_SetPriority(EXTI0_1_IRQn, 0);
+	/* Enable EXTI0 interrupts in NVIC */
+	// Relevant register: NVIC->ISER[0], or use NVIC_EnableIRQ
+	//interrupt set enable register -> EXTI0 (bit 6) -> 1 enables
+	NVIC_EnableIRQ(EXTI0_1_IRQn);
+///EXTI1SETUP
+	/* Map EXTI1 line to PA1 */
+	// Relevant register: SYSCFG->EXTICR[0]
+	SYSCFG->EXTICR[0] &= ~(0xF<<4) ;
+	/* EXTI0 line interrupts: set rising-edge trigger */
+	// Relevant register: EXTI->RTSR
+	EXTI->RTSR |= EXTI_RTSR_TR1; // enable rising edge for PA0
+	/* Unmask interrupts from EXTI2 line */
+	// Relevant register: EXTI->IMR
+	// set EXTI IMR bit 0 (...43210) to 1 to unmask
+	EXTI->IMR |= EXTI_IMR_MR1;
 
 }
 
@@ -212,6 +268,62 @@ void TIM2_IRQHandler()
 		TIM2->CR1 |= TIM_CR1_CEN;
 	}
 }
+// declared elsewhere - system/src/cmsis/vectors_stm32f051x8.c
+void EXTI0_1_IRQHandler()
+{
+	//reset edge flags to prevent carry over errors
+	edge_flag_FG = 0;
+	edge_flag_555 = 0;
+
+	//logic for EXI
+	if((EXTI->PR & EXTI_PR_PR1)!=0){
+
+		//add code for freq measuring when inSig ==
+		if(inSig==0){
+			//add code to measure EXTI1 Freq
+		}
+	}
+	// logic for button press
+
+	if((EXTI->PR & EXTI_PR_PR0)!=0){
+		if(inSig ==0){
+			inSig = 1;
+			//Disable EXTI1 interrupt
+			//mask interrupts from EXTI0 line
+			// Relevant register: EXTI->IMR
+			// set EXTI IMR bit 1 (...43210) to 0 to mask
+			EXTI->IMR &= ~EXTI_IMR_MR1;
+			//Enable EXTI2 interrupt
+			/* Unmask interrupts from EXTI2 line */
+			// Relevant register: EXTI->IMR
+			// set EXTI IMR bit 2 (...43210) to 1 to unmask
+			EXTI->IMR |= EXTI_IMR_MR2;
+		}else
+		{inSig = 0;
+			//Disable EXTI2 interrupt
+			/* mask interrupts from EXTI2 line */
+			// Relevant register: EXTI->IMR
+			// set EXTI IMR bit 2 (...43210) to 0 to mask
+			EXTI->IMR &= ~EXTI_IMR_MR2;
+			//Enable EXTI1 interrup
+			/* Unmask interrupts from EXTI0 line */
+			// Relevant register: EXTI->IMR
+			// set EXTI IMR bit 0 (...43210) to 1 to unmask
+			EXTI->IMR |= EXTI_IMR_MR1;
+		}
+
+	}
+		//test print
+		///*NEED TO DISABLE PRINTS IN EXTI2_3
+		trace_printf("PA 0 interrupt works\n");
+	
+		// Clear EXTI0 interrupt pending flag (EXTI->PR).
+		// NOTE: A pending register (PR) bit is cleared
+		// by writing 1 to it.
+		EXTI->PR |= EXTI_PR_PR0;
+
+}
+
 
 
 /* This handler is declared in system/src/cmsis/vectors_stm32f051x8.c */
@@ -227,9 +339,9 @@ void EXTI2_3_IRQHandler()
 	{
 		//
 		// 1. If this is the first edge:
-		if(edge_flag == 0){
+		if(edge_flag_FG == 0){
 			// set edge flag to 1
-			edge_flag = 1;
+			edge_flag_FG = 1;
 			//	- Clear count register (TIM2->CNT).
 			TIM2->CNT = 0x0;
 			//	- Start timer (TIM2->CR1).
@@ -242,7 +354,7 @@ void EXTI2_3_IRQHandler()
 			TIM2->CR1 &= ~(0x1);
 
 			// clear flag to prepare for next period
-			edge_flag = 0;
+			edge_flag_FG = 0;
 
 			//	- Read out count register (TIM2->CNT).
 			count = TIM2->CNT;
@@ -254,8 +366,7 @@ void EXTI2_3_IRQHandler()
 			//	  with floating-point numbers: you must use
 			//	  "unsigned int" type to print your signal
 			//	  period and frequency.
-			trace_printf("Period is: %f ms\n", (float) period*1000);
-			trace_printf("Freq is: %f kHz\n", (float) freq/1000);
+			trace_printf("FG Period is: %f ms     -   FG Freq is: %f kHz\n", (float) period*1000,(float) freq/1000);
 
 		}
 		// 2. Clear EXTI2 interrupt pending flag (EXTI->PR).
@@ -265,6 +376,8 @@ void EXTI2_3_IRQHandler()
 
 		}
 	}
+
+
 
 
 
