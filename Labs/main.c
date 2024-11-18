@@ -121,6 +121,8 @@ main(int argc, char* argv[])
 	myGPIOA_Init();		/* Initialize I/O port PA */
 	myTIM2_Init();		/* Initialize timer TIM2 */
 	myEXTI_Init();		/* Initialize EXTI */
+	myADC_Init(); 		/* Initialize ADC*/
+	myDAC_Init();
 
 
 
@@ -130,11 +132,13 @@ main(int argc, char* argv[])
 		ADC1->CR |= ADC_CR_ADSTART;
 		// Wait for EOC. Autoclears once ADC_DR is read
 		while(!(ADC1->ISR & ADC_ISR_EOC )){};
-		potValRaw = ADC1->DR;
-		// Voltage value being read by DAC
+		potValRaw = ADC1->DR; // Send to DAC Later
+		// Voltage value being read by ADC
 		potValVoltage=(potValRaw/4095)*3.3;
 		// Potentiometer Resistance
 		potValResistance=1.22*potValRaw;
+		// Send to DAC
+		DAC1->DHR12R1 = potValRaw;
 	}
 
 	return 0;
@@ -175,10 +179,29 @@ void myADC_Init(){
 	while(!(ADC1->ISR & ADC_ISR_ADRDY)){};
 }
 
-// DON'T TRUST
+/*
+Set up DAC operation on PA4
+Setup Operation:
+	1-Enable clock for GPIOA peripheral
+	2-PA4 set to analog mode
+	3-Enable clock for DAC
+	4-Configure DAC_CR
+		DAC Enable, Enable TriState buffer, Disable Channel 1 trigger
+*/
 void myDAC_Init(){
+
+	/* Enable clock for GPIOA peripheral */
+	// Relevant register: RCC->AHBENR
+    // This turns on the clock to PortA so that it's active
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+	// Enable DAC clock. BIT29 set to 1
+	RCC->APB1ENR |= RCC_APB1ENR_DACEN;
 	// Set PA[4] to Analog Mode. Set to 11 for analog mode
 	GPIOA->MODER |= GPIO_MODER_MODER4;
+	// Configure DAC CR
+	DAC1->CR &= ~(DAC_CR_BOFF1+DAC_CR_TEN1_Msk)
+	// Enable DAC
+	DAC1->CR |= DAC_CR_EN1;
 }
 void myGPIOA_Init()
 {
