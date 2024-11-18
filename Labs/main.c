@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include "diag/Trace.h"
 #include "cmsis/cmsis_device.h"
+#include "stm32f051x8.h"
 
 volatile int edge_flag_FG=0;
 volatile int edge_flag_555=0;
@@ -55,6 +56,8 @@ volatile int inSig = 1;  //default input from signal generator PB changes to 0 f
 void myGPIOA_Init(void); //PA IO Setup
 void myTIM2_Init(void);
 void myEXTI_Init(void);
+void myADC_Init(void); // initialize ADC for Potentiometer Reading
+void myDAC_Init(void); // Initialize DAC
 
 
 
@@ -126,8 +129,33 @@ main(int argc, char* argv[])
 	return 0;
 
 }
+/*
+Set up ADC Operation on PA5
+Setup operation:
+	1-Enable clock for PA and ADC
+	2-PA[5] Set to Analog mode
+	3-Configure ADC_CHSELR[5] to 1 to select PA5 as a channel
+	4-Configure SMPR to 111, slowest sample rate
+	5-Configure CR[0]=1 to enable ADC
+	6-Wait for ISR[0] = 1
+*/
+void myADC_Init(){
+	// 1
+	/* Enable clock for GPIOA peripheral */
+	// Relevant register: RCC->AHBENR
+    // This turns on the clock to PortA so that it's active
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+	// Enable ADC clock. BIT9 set to 1
+	RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
+	// Set PA[5] to Analog Mode. Set to 11 for analog mode
+	GPIOA->MODER |= GPIO_MODER_MODER5;
+}
 
-
+// DON'T TRUST
+void myDAC_Init(){
+	// Set PA[4] to Analog Mode. Set to 11 for analog mode
+	GPIOA->MODER |= GPIO_MODER_MODER4;
+}
 void myGPIOA_Init()
 {
 	/* Enable clock for GPIOA peripheral */
