@@ -15,11 +15,11 @@
 #include <stdio.h>
 #include "diag/Trace.h"
 #include "cmsis/cmsis_device.h"
-#include "stm32f051x8.h"
 
 volatile int edge_flag_FG=0;
 volatile int edge_flag_555=0;
 volatile int inSig = 1;  //default input from signal generator PB changes to 0 for 555 input
+
 
 
 
@@ -109,6 +109,9 @@ void myDAC_Init(void); // Initialize DAC
 int
 main(int argc, char* argv[])
 {
+	volatile uint16_t potValRaw;
+	volatile uint16_t potValResistance;
+	volatile float potValVoltage;
 
 	SystemClock48MHz();
 
@@ -123,7 +126,15 @@ main(int argc, char* argv[])
 
 	while (1)
 	{
-		// Nothing is going on here...
+		// Start ADC Process,
+		ADC1->CR |= ADC_CR_ADSTART;
+		// Wait for EOC. Autoclears once ADC_DR is read
+		while(!(ADC1->ISR & ADC_ISR_EOC )){};
+		potValRaw = ADC1->DR;
+		// Voltage value being read by DAC
+		potValVoltage=(potValRaw/4095)*3.3;
+		// Potentiometer Resistance
+		potValResistance=1.22*potValRaw;
 	}
 
 	return 0;
@@ -131,6 +142,7 @@ main(int argc, char* argv[])
 }
 /*
 Set up ADC Operation on PA5
+ADC setup is reset on powerup.
 Setup operation:
 	1-Enable clock for PA and ADC
 	2-PA[5] Set to Analog mode
@@ -149,6 +161,18 @@ void myADC_Init(){
 	RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
 	// Set PA[5] to Analog Mode. Set to 11 for analog mode
 	GPIOA->MODER |= GPIO_MODER_MODER5;
+	// Configure ADC Register
+	// 12 bit resolution, right align, overrun mode,continous mode
+	ADC1->CFGR1 |= ADC_CFGR1_OVRMOD + ADC_CFGR1_CONT;
+	ADC1->CFGR1 &= ~(ADC_CFGR1_RES+ADC_CFGR1_ALIGN);
+	// Selecting channel 5
+	ADC1->CJSELR = ADC_CHSELR_CHSEL5;    
+	// Select ADC Sampling time
+	ADC1->SMPR = ADC_SMPR_SMP; 
+	// Enable ADC
+	ADC1->CR |= ADC_CR_ADEN;
+	// Wait for ADRDY Flag, indicating ADC is ready for operation
+	while(!(ADC1->ISR & ADC_ISR_ADRDY)){};
 }
 
 // DON'T TRUST
