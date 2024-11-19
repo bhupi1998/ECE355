@@ -311,14 +311,14 @@ main(int argc, char* argv[])
 		while(!(ADC1->ISR & ADC_ISR_EOC )){};
 		potValRaw = ADC1->DR; // Send to DAC Later
 		// Voltage value being read by ADC
-		potValVoltage=(potValRaw/4095)*3.3;
+		potValVoltage=((float)potValRaw/4095)*3.3;
 		// Potentiometer Resistance
 		potValResistance=1.22*potValRaw;
 		// Send to DAC
 		DAC1->DHR12R1 = potValRaw;
 		// Refresh OLED
 		// refresh_OLED();
-		trace_printf("Pot Res: %f ohms  DAC output is: %f V\n", potValResistance,potValVoltage);
+		trace_printf("Pot Res: %d ohms  DAC output is: %f V\n", potValResistance,potValVoltage);
 	}
 
 	return 0;
