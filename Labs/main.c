@@ -317,7 +317,7 @@ main(int argc, char* argv[])
 		DAC1->DHR12R1 = potValRaw;
 		// Refresh OLED
 		// refresh_OLED();
-		trace_printf("Pot Res: %f ms  DAC output is: %f kHz\n", potValResistance,potValVoltage);
+		trace_printf("Pot Res: %f ohms  DAC output is: %f V\n", potValResistance,potValVoltage);
 	}
 
 	return 0;
