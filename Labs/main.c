@@ -22,14 +22,6 @@ volatile int edge_flag_FG=0;
 volatile int edge_flag_555=0;
 volatile int inSig = 1;  //default input from signal generator PB changes to 0 for 555 input
 
-// Copy and pasted
-void oled_Write(unsigned char);
-void oled_Write_Cmd(unsigned char)
-void oled_Write_Data(unsigned char)
-
-void oled_config(void);
-
-void refresh_OLED(void)
 
 
 SPI_HandleTypeDef SPI_Handle;
@@ -236,6 +228,12 @@ void myTIM2_Init(void);
 void myEXTI_Init(void);
 void myADC_Init(void); // initialize ADC for Potentiometer Reading
 void myDAC_Init(void); // Initialize DAC
+// Copy and pasted
+void oled_Write(unsigned char);
+void oled_Write_Cmd(unsigned char)
+void oled_Write_Data(unsigned char)
+void oled_config(void);
+void refresh_OLED(void)
 
 
 
@@ -301,7 +299,6 @@ main(int argc, char* argv[])
 	myEXTI_Init();		/* Initialize EXTI */
 	myADC_Init(); 		/* Initialize ADC*/
 	myDAC_Init();		/* Initialize DAC*/
-
 	oled_config();  	/*Oled Configuration*/
 
 
@@ -407,9 +404,23 @@ void oled_Write( unsigned char Value )
 void oled_config( void )
 {
 
-// Don't forget to enable GPIOB clock in RCC
-// Don't forget to configure PB3/PB5 as AF0
-// Don't forget to enable SPI1 clock in RCC
+	// Don't forget to enable GPIOB clock in RCC
+	/* Enable clock for GPIOB peripheral */
+    // This turns on the clock to PortB so that it's active
+    RCC->AGBENR |= RCC_AHBENR_GPIOBEN;
+	// Don't forget to configure PB3/PB5 as AF0
+	/* Configure PB3, PB5 as AF0*/
+	GPIOB->MODER &= ~(GPIO_MODER_MODER3 | GPIO_MODER_MODER5);
+	GPIOB->MODER |= GPIO_MODER_MODER3_1 | GPIO_MODER_MODER5_1 ;
+	// Don't forget to enable SPI1 clock in RCC
+    RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+
+	// Setup PB4(RES),PB6(CS) and PB7(D/C) as outputs
+	// Clear mode bits for PB4, PB6, and PB7
+	GPIOB->MODER &= ~(GPIO_MODER_MODER4 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7);
+	// Set PB4, PB6, and PB7 to output mode
+	GPIOB->MODER |= (GPIO_MODER_MODER4_0 | GPIO_MODER_MODER6_0 | GPIO_MODER_MODER7_0);
+
 
     SPI_Handle.Instance = SPI1;
 
@@ -432,14 +443,18 @@ void oled_config( void )
 // Enable the SPI
 //
     __HAL_SPI_ENABLE( &SPI_Handle );
-
-
+	// !I WOULD LIKE TO USE THE HAL_DELAY FUNCTION HERE
+!
     /* Reset LED Display (RES# = PB4):
        - make pin PB4 = 0, wait for a few ms
        - make pin PB4 = 1, wait for a few ms
     */
-    ...
-
+   // set pb4
+	GPIOB->BSRR = GPIO_BSRR_BR_4;
+	HAL_Delay(40);
+	// clear pb4`
+	GPIOB->BSRR = GPIO_BSRR_BS_4;
+    HAL_Delay(40);
 
 //
 // Send initialization commands to LED Display
