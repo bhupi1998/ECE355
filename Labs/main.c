@@ -295,11 +295,11 @@ main(int argc, char* argv[])
 	trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
 	myGPIOA_Init();		/* Initialize I/O port PA */
-	myTIM2_Init();		/* Initialize timer TIM2 */
-	myEXTI_Init();		/* Initialize EXTI */
+	//myTIM2_Init();		/* Initialize timer TIM2 */
+	//myEXTI_Init();		/* Initialize EXTI */
 	myADC_Init(); 		/* Initialize ADC*/
 	myDAC_Init();		/* Initialize DAC*/
-	oled_config();  	/*Oled Configuration*/
+	//oled_config();  	/*Oled Configuration*/
 
 
 	while (1)
@@ -316,7 +316,8 @@ main(int argc, char* argv[])
 		// Send to DAC
 		DAC1->DHR12R1 = potValRaw;
 		// Refresh OLED
-		refresh_OLED();
+		// refresh_OLED();
+		trace_printf("Pot Res: %f ms  DAC output is: %f kHz\n", potValResistance,potValVoltage);
 	}
 
 	return 0;
@@ -364,20 +365,28 @@ void refresh_OLED( void )
 
 void oled_Write_Cmd( unsigned char cmd )
 {
-    ... // make PB6 = CS# = 1
-    ... // make PB7 = D/C# = 0
-    ... // make PB6 = CS# = 0
+    // make PB6 = CS# = 1
+	GPIOB->BSRR = GPIO_BSRR_BS_6;
+    // make PB7 = D/C# = 0
+	GPIOB->BSRR = GPIO_BSRR_BR_7;
+    // make PB6 = CS# = 0
+	GPIOB->BSRR = GPIO_BSRR_BR_6;
     oled_Write( cmd );
-    ... // make PB6 = CS# = 1
+    // make PB6 = CS# = 1
+	GPIOB->BSRR = GPIO_BSRR_BS_6;
 }
 
 void oled_Write_Data( unsigned char data )
 {
-    ... // make PB6 = CS# = 1
-    ... // make PB7 = D/C# = 1
-    ... // make PB6 = CS# = 0 
+    // make PB6 = CS# = 1
+	GPIOB->BSRR = GPIO_BSRR_BS_6;
+    // make PB7 = D/C# = 1
+	GPIOB->BSRR = GPIO_BSRR_BS_7;
+    // make PB6 = CS# = 0 
+	GPIOB->BSRR = GPIO_BSRR_BR_6;
     oled_Write( data );
-    ... // make PB6 = CS# = 1
+    // make PB6 = CS# = 1
+	GPIOB->BSRR = GPIO_BSRR_BS_6;
 }
 
 
@@ -767,7 +776,7 @@ void EXTI2_3_IRQHandler()
 			freq = 1/period;
 			//	- Print calculated values to the console.
 			//	  NOTE: Function trace_printf does not work
-			//	  with floating-point numbers: you must use
+			//	  with floatintrace_printf("FG Period is: %f ms     -   FG Freq is: %f kHz\n", (float) period*1000,(float) freq/1000);g-point numbers: you must use
 			//	  "unsigned int" type to print your signal
 			//	  period and frequency.
 			trace_printf("FG Period is: %f ms     -   FG Freq is: %f kHz\n", (float) period*1000,(float) freq/1000);
