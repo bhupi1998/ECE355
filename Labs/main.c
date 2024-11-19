@@ -22,7 +22,8 @@ volatile int edge_flag_FG=0;
 volatile int edge_flag_555=0;
 volatile int inSig = 1;  //default input from signal generator PB changes to 0 for 555 input
 
-
+unsigned int Freq = 0;  // Example: measured frequency value (global variable)
+unsigned int Res = 0;   // Example: measured resistance value (global variable)
 
 SPI_HandleTypeDef SPI_Handle;
 
@@ -57,7 +58,7 @@ unsigned char oled_init_cmds[] =
 //
 // Character specifications for LED Display (1 row = 8 bytes = 1 ASCII character)
 // Example: to display '4', retrieve 8 data bytes stored in Characters[52][X] row
-//          (where X = 0, 1, ..., 7) and send them one by one to LED Display. 
+//          (where X = 0, 1, ..., 7) and send them one by one to LED Display.
 // Row number = character ASCII code (e.g., ASCII code of '4' is 0x34 = 52)
 //
 unsigned char Characters[][8] = {
@@ -230,10 +231,10 @@ void myADC_Init(void); // initialize ADC for Potentiometer Reading
 void myDAC_Init(void); // Initialize DAC
 // Copy and pasted
 void oled_Write(unsigned char);
-void oled_Write_Cmd(unsigned char)
-void oled_Write_Data(unsigned char)
+void oled_Write_Cmd(unsigned char);
+void oled_Write_Data(unsigned char);
 void oled_config(void);
-void refresh_OLED(void)
+void refresh_OLED(void);
 
 
 
@@ -332,7 +333,7 @@ main(int argc, char* argv[])
 void refresh_OLED( void )
 {
     // Buffer size = at most 16 characters per PAGE + terminating '\0'
-    unsigned char Buffer[17]; 
+    unsigned char Buffer[17];
 
     snprintf( Buffer, sizeof( Buffer ), "R: %5u Ohms", Res );
     /* Buffer now contains your character ASCII codes for LED Display
@@ -341,7 +342,7 @@ void refresh_OLED( void )
            send 8 bytes in Characters[c][0-7] to LED Display
     */
 
-    ...
+    //...
 
 
     snprintf( Buffer, sizeof( Buffer ), "F: %5u Hz", Freq );
@@ -351,14 +352,14 @@ void refresh_OLED( void )
            send 8 bytes in Characters[c][0-7] to LED Display
     */
 
-    ...
+    //...
 
 
-	/* Wait for ~100 ms (for example) to get ~10 frames/sec refresh rate 
+	/* Wait for ~100 ms (for example) to get ~10 frames/sec refresh rate
        - You should use TIM3 to implement this delay (e.g., via polling)
     */
 
-    ...
+    //...
 
 }
 
@@ -382,7 +383,7 @@ void oled_Write_Data( unsigned char data )
 	GPIOB->BSRR = GPIO_BSRR_BS_6;
     // make PB7 = D/C# = 1
 	GPIOB->BSRR = GPIO_BSRR_BS_7;
-    // make PB6 = CS# = 0 
+    // make PB6 = CS# = 0
 	GPIOB->BSRR = GPIO_BSRR_BR_6;
     oled_Write( data );
     // make PB6 = CS# = 1
@@ -395,7 +396,7 @@ void oled_Write( unsigned char Value )
 
     /* Wait until SPI1 is ready for writing (TXE = 1 in SPI1_SR) */
 
-    ...
+    //...
 
     /* Send one 8-bit character:
        - This function also sets BIDIOE = 1 in SPI1_CR1
@@ -405,7 +406,7 @@ void oled_Write( unsigned char Value )
 
     /* Wait until transmission is complete (TXE = 1 in SPI1_SR) */
 
-    ...
+    //...
 
 }
 
@@ -416,7 +417,7 @@ void oled_config( void )
 	// Don't forget to enable GPIOB clock in RCC
 	/* Enable clock for GPIOB peripheral */
     // This turns on the clock to PortB so that it's active
-    RCC->AGBENR |= RCC_AHBENR_GPIOBEN;
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
 	// Don't forget to configure PB3/PB5 as AF0
 	/* Configure PB3, PB5 as AF0*/
 	GPIOB->MODER &= ~(GPIO_MODER_MODER3 | GPIO_MODER_MODER5);
@@ -453,7 +454,7 @@ void oled_config( void )
 //
     __HAL_SPI_ENABLE( &SPI_Handle );
 	// !I WOULD LIKE TO USE THE HAL_DELAY FUNCTION HERE
-!
+
     /* Reset LED Display (RES# = PB4):
        - make pin PB4 = 0, wait for a few ms
        - make pin PB4 = 1, wait for a few ms
@@ -474,13 +475,13 @@ void oled_config( void )
     }
 
 
-    /* Fill LED Display data memory (GDDRAM) with zeros: 
+    /* Fill LED Display data memory (GDDRAM) with zeros:
        - for each PAGE = 0, 1, ..., 7
            set starting SEG = 0
            call oled_Write_Data( 0x00 ) 128 times
     */
 
-    ...
+    //...
 
 
 }
@@ -511,9 +512,9 @@ void myADC_Init(){
 	ADC1->CFGR1 |= ADC_CFGR1_OVRMOD + ADC_CFGR1_CONT;
 	ADC1->CFGR1 &= ~(ADC_CFGR1_RES+ADC_CFGR1_ALIGN);
 	// Selecting channel 5
-	ADC1->CJSELR = ADC_CHSELR_CHSEL5;    
+	ADC1->CHSELR = ADC_CHSELR_CHSEL5;
 	// Select ADC Sampling time
-	ADC1->SMPR = ADC_SMPR_SMP; 
+	ADC1->SMPR = ADC_SMPR_SMP;
 	// Enable ADC
 	ADC1->CR |= ADC_CR_ADEN;
 	// Wait for ADRDY Flag, indicating ADC is ready for operation
@@ -540,7 +541,7 @@ void myDAC_Init(){
 	// Set PA[4] to Analog Mode. Set to 11 for analog mode
 	GPIOA->MODER |= GPIO_MODER_MODER4;
 	// Configure DAC CR
-	DAC1->CR &= ~(DAC_CR_BOFF1+DAC_CR_TEN1_Msk)
+	DAC1->CR &= ~(DAC_CR_BOFF1+DAC_CR_TEN1_Msk);
 	// Enable DAC
 	DAC1->CR |= DAC_CR_EN1;
 }
@@ -729,7 +730,7 @@ void EXTI0_1_IRQHandler()
 		//test print
 		///*NEED TO DISABLE PRINTS IN EXTI2_3
 		trace_printf("PA 0 interrupt works\n");
-	
+
 		// Clear EXTI0 interrupt pending flag (EXTI->PR).
 		// NOTE: A pending register (PR) bit is cleared
 		// by writing 1 to it.
