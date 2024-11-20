@@ -221,11 +221,14 @@ unsigned char Characters[][8] = {
 
 /* Clock prescaler for TIM2 timer: no prescaling */
 #define myTIM2_PRESCALER ((uint16_t)0x0000)
+#define myTIM3_PRESCALER ((uint16_t) 999) // divide clock by 1000 to get 40KHz -> max delay of 1.64s
 /* Maximum possible setting for overflow */
 #define myTIM2_PERIOD ((uint32_t)0xFFFFFFFF)
 
 void myGPIOA_Init(void); //PA IO Setup
 void myTIM2_Init(void);
+void myTIM3_Init(void); //Initialize TIM3
+void TIM3Delay (uint16_t);
 void myEXTI_Init(void);
 void myADC_Init(void); // initialize ADC for Potentiometer Reading
 void myDAC_Init(void); // Initialize DAC
@@ -575,8 +578,44 @@ void myGPIOA_Init()
 
 
 }
+// Initialize Timer3. This will be used to implement dalays
+void myTIM3_Init(){
+	// Enable TIM3 clock
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+	/* TIM3 Configuration: 
+		-Auto-reload disabled. Using it as a one shot timer
+		-Count Down mode. Starting value will be the delay desired
+		-CEN:0 Counter is not enabled
+		-UDIS:0 Enable update event. 
+		-URS:1 Only underflow generated an update interrut
+		-!OPM:1 One Pulse Mode. Counter stops at update event. CEN is cleared
+		-DIR:1 Count down
+		-CMS:00: Let DIR dictate count direction
+		-ARPE:0: No Auto Reload Buffer
+	*/
+	TIM3->CR1 = 0xb00011100;
+	TIM3->PSC = myTIM3_PRESCALER;
+}
+// Used to create a delay
+// Input: delay in ms
+// Returns: Nothing
+// TIM3 is 16bit
+void TIM3Delay (uint16_t delay){
+	unint16_t counterVal = delay*SystemCoreClock/((myTIM3_PRESCALER+1)*1000);
+	TIM3->ARR = counterVal;
+	// Clear UIF flag
+	TIM3->SR &= ~TIM_SR_UIF;
 
+	// Enable counter
+	TIM3->CR1 |= TIM_CR1_CEN;
 
+	// Wait for the update event (timer underflow)
+    while (!(TIM3->SR & TIM_SR_UIF));
+	// since timer is in ONS mode CEN gets cleared
+    // Clear the update interrupt flag
+    TIM3->SR &= ~TIM_SR_UIF;
+}
+// Initialize Timer 2. This will be used to measure frequency of an incoming signal
 void myTIM2_Init()
 {
 	/* Enable clock for TIM2 peripheral */
@@ -589,8 +628,7 @@ void myTIM2_Init()
     TIM2->CR1 = ((uint16_t)0x008C);
 
 	/* Set clock prescaler value */
-	TIM2->PSC = myTIM2_PRESCALER
-			;
+	TIM2->PSC = myTIM2_PRESCALER;			;
 	/* Set auto-reloaded delay */
 	TIM2->ARR = myTIM2_PERIOD;
 
