@@ -228,7 +228,7 @@ unsigned char Characters[][8] = {
 void myGPIOA_Init(void); //PA IO Setup
 void myTIM2_Init(void);
 void myTIM3_Init(void); //Initialize TIM3
-void TIM3Delay (uint16_t);
+void TIM3Delay (uint16_t); // timer used for delay purposes
 void myEXTI_Init(void);
 void myADC_Init(void); // initialize ADC for Potentiometer Reading
 void myDAC_Init(void); // Initialize DAC
@@ -634,6 +634,7 @@ void TIM3Delay (uint16_t delay){
     TIM3->SR &= ~TIM_SR_UIF;
 }
 // Initialize Timer 2. This will be used to measure frequency of an incoming signal
+// !unchanged
 void myTIM2_Init()
 {
 	/* Enable clock for TIM2 peripheral */
@@ -664,7 +665,8 @@ void myTIM2_Init()
     TIM2->DIER |= TIM_DIER_UIE;
 }
 
-
+// ! Changed
+// Initialize interrupts to external inputs
 void myEXTI_Init()
 {
 	///EXTI2 SETUP
@@ -722,6 +724,7 @@ void myEXTI_Init()
 
 }
 
+// !This is unchanged
 /* This handler is declared in system/src/cmsis/vectors_stm32f051x8.c */
 void TIM2_IRQHandler()
 {
@@ -794,7 +797,7 @@ void EXTI0_1_IRQHandler()
 
 }
 
-
+// This is unchanged
 
 /* This handler is declared in system/src/cmsis/vectors_stm32f051x8.c */
 void EXTI2_3_IRQHandler()
