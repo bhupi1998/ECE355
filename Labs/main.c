@@ -344,8 +344,15 @@ void refresh_OLED( void )
        - for each c = ASCII code = Buffer[0], Buffer[1], ...,
            send 8 bytes in Characters[c][0-7] to LED Display
     */
-
-    //...
+   // start from row 2 col 3
+   oled_Write_Cmd(0xB2); // select row. Bx where x is the row
+   oled_Write_Cmd(0x03); // select col lower. 0x where x is the lower 4 bits of the col number
+   oled_Write_Cmd(0x10); // select col upper. 1x where x is the upper 4 bits of the col number
+	for(int i = 0; i<17; i++){
+		for(int j = 0; j<8; j++){
+			oled_Write_Data(Characters[Buffer[i]][j]);
+		}
+	}
 
 
     snprintf( Buffer, sizeof( Buffer ), "F: %5u Hz", Freq );
@@ -354,15 +361,22 @@ void refresh_OLED( void )
        - for each c = ASCII code = Buffer[0], Buffer[1], ...,
            send 8 bytes in Characters[c][0-7] to LED Display
     */
-
-    //...
+   // start from row 4 col 3
+   oled_Write_Cmd(0xB4); // select row
+   oled_Write_Cmd(0x03); // select col lower
+   oled_Write_Cmd(0x10); // select col upper
+	for(int i = 0; i<17; i++){
+		for(int j = 0; j<8; j++){
+			oled_Write_Data(Characters[Buffer[i]][j]);
+		}
+	}
 
 
 	/* Wait for ~100 ms (for example) to get ~10 frames/sec refresh rate
        - You should use TIM3 to implement this delay (e.g., via polling)
     */
 
-    //...
+    TIM3Delay(100);
 
 }
 
@@ -399,7 +413,7 @@ void oled_Write( unsigned char Value )
 
     /* Wait until SPI1 is ready for writing (TXE = 1 in SPI1_SR) */
 
-    //...
+    while(!(SPI1->SR & SPI_SR_TXE));
 
     /* Send one 8-bit character:
        - This function also sets BIDIOE = 1 in SPI1_CR1
@@ -409,7 +423,7 @@ void oled_Write( unsigned char Value )
 
     /* Wait until transmission is complete (TXE = 1 in SPI1_SR) */
 
-    //...
+    while(!(SPI1->SR & SPI_SR_TXE));
 
 }
 
@@ -456,7 +470,6 @@ void oled_config( void )
 // Enable the SPI
 //
     __HAL_SPI_ENABLE( &SPI_Handle );
-	// !I WOULD LIKE TO USE THE HAL_DELAY FUNCTION HERE
 
     /* Reset LED Display (RES# = PB4):
        - make pin PB4 = 0, wait for a few ms
@@ -464,10 +477,10 @@ void oled_config( void )
     */
    // set pb4
 	GPIOB->BSRR = GPIO_BSRR_BR_4;
-	HAL_Delay(40);
+	TIM3Delay(5);
 	// clear pb4`
 	GPIOB->BSRR = GPIO_BSRR_BS_4;
-    HAL_Delay(40);
+    TIM3Delay(5);
 
 //
 // Send initialization commands to LED Display
@@ -483,8 +496,12 @@ void oled_config( void )
            set starting SEG = 0
            call oled_Write_Data( 0x00 ) 128 times
     */
-
-    //...
+   for(int PAGE=0;PAGE<8;PAGE++){
+	for(int COL = 0; COL<128; COL++ ){
+		oled_Write_Data(0x00);
+	}
+   }
+    
 
 
 }
@@ -600,6 +617,7 @@ void myTIM3_Init(){
 // Input: delay in ms
 // Returns: Nothing
 // TIM3 is 16bit
+// Max delay of 1.64s
 void TIM3Delay (uint16_t delay){
 	unint16_t counterVal = delay*SystemCoreClock/((myTIM3_PRESCALER+1)*1000);
 	TIM3->ARR = counterVal;
