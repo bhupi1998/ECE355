@@ -322,7 +322,7 @@ main(int argc, char* argv[])
 		// Send to DAC
 		DAC1->DHR12R1 = potValRaw;
 		// Refresh OLED
-		//refresh_OLED();
+		refresh_OLED();
 
 	}
 
@@ -340,15 +340,15 @@ void refresh_OLED( void )
     // Buffer size = at most 16 characters per PAGE + terminating '\0'
     unsigned char Buffer[17];
 
-    snprintf( Buffer, sizeof( Buffer ), "R: %5u Ohms", Res );
+    snprintf( Buffer, sizeof( Buffer ), "R: %5u Ohms   ", Res );
     /* Buffer now contains your character ASCII codes for LED Display
        - select PAGE (LED Display line) and set starting SEG (column)
        - for each c = ASCII code = Buffer[0], Buffer[1], ...,
            send 8 bytes in Characters[c][0-7] to LED Display
     */
-   // start from row 2 col 3
+   // start from row 2 col 16
    oled_Write_Cmd(0xB2); // select row. Bx where x is the row
-   oled_Write_Cmd(0x03); // select col lower. 0x where x is the lower 4 bits of the col number
+   oled_Write_Cmd(0x02); // select col lower. 0x where x is the lower 4 bits of the col number
    oled_Write_Cmd(0x10); // select col upper. 1x where x is the upper 4 bits of the col number
 	for(int i = 0; i<17; i++){
 		for(int j = 0; j<8; j++){
@@ -357,15 +357,15 @@ void refresh_OLED( void )
 	}
 
 
-    snprintf( Buffer, sizeof( Buffer ), "F: %5u Hz", Freq );
+    snprintf( Buffer, sizeof( Buffer ), "F: %5u Hz   ", Freq );
     /* Buffer now contains your character ASCII codes for LED Display
        - select PAGE (LED Display line) and set starting SEG (column)
        - for each c = ASCII code = Buffer[0], Buffer[1], ...,
            send 8 bytes in Characters[c][0-7] to LED Display
     */
-   // start from row 4 col 3
+   // start from row 4 col 16
    oled_Write_Cmd(0xB4); // select row
-   oled_Write_Cmd(0x03); // select col lower
+   oled_Write_Cmd(0x02); // select col lower
    oled_Write_Cmd(0x10); // select col upper
 	for(int i = 0; i<17; i++){
 		for(int j = 0; j<8; j++){
@@ -499,51 +499,51 @@ void oled_config( void )
            call oled_Write_Data( 0x00 ) 128 times
     */
     oled_Write_Cmd(0xB0); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
     oled_Write_Cmd(0xB1); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
     oled_Write_Cmd(0xB2); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
     oled_Write_Cmd(0xB3); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
     oled_Write_Cmd(0xB4); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
     oled_Write_Cmd(0xB5); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
     oled_Write_Cmd(0xB6); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
     oled_Write_Cmd(0xB7); // select row
-    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x02); // select col lower
     oled_Write_Cmd(0x10); // select col upper
-	for(int COL = 0; COL<129; COL++ ){
+	for(int COL = 0; COL<131; COL++ ){
 		oled_Write_Data(0x00);
 	}
 
@@ -782,9 +782,9 @@ void EXTI0_1_IRQHandler()
 		volatile unsigned int count=0; // variable to save counter value
 		float freq, period;
 		// 1. If this is the first edge:
-		if(edge_flag_FG == 0){
+		if(edge_flag_555 == 0){
 			// set edge flag to 1
-			edge_flag_FG = 1;
+			edge_flag_555 = 1;
 			//	- Clear count register (TIM2->CNT).
 			TIM2->CNT = 0x0;
 			//	- Start timer (TIM2->CR1).
@@ -797,7 +797,7 @@ void EXTI0_1_IRQHandler()
 			TIM2->CR1 &= ~(0x1);
 
 			// clear flag to prepare for next period
-			edge_flag_FG = 0;
+			edge_flag_555 = 0;
 
 			//	- Read out count register (TIM2->CNT).
 			count = TIM2->CNT;
@@ -814,7 +814,7 @@ void EXTI0_1_IRQHandler()
 	// logic for button press
 
 	if((EXTI->PR & EXTI_PR_PR0)!=0){
-		if(inSig ==0){
+		if(inSig == 0){
 			inSig = 1;
 			//Disable EXTI1 interrupt
 			//mask interrupts from EXTI0 line
