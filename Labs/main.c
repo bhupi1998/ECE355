@@ -299,11 +299,12 @@ main(int argc, char* argv[])
 	trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
 	myGPIOA_Init();		/* Initialize I/O port PA */
-	//myTIM2_Init();		/* Initialize timer TIM2 */
-	//myEXTI_Init();		/* Initialize EXTI */
+	myTIM2_Init();		/* Initialize timer TIM2 */
+	myTIM3_Init();
+	myEXTI_Init();		/* Initialize EXTI */
 	myADC_Init(); 		/* Initialize ADC*/
 	myDAC_Init();		/* Initialize DAC*/
-	//oled_config();  	/*Oled Configuration*/
+	oled_config();  	/*Oled Configuration*/
 
 
 	while (1)
@@ -316,12 +317,13 @@ main(int argc, char* argv[])
 		// Voltage value being read by ADC
 		potValVoltage=((float)potValRaw/4095)*3.3;
 		// Potentiometer Resistance
-		potValResistance=1.22*potValRaw;
+		Res=1.22*potValRaw;
+
 		// Send to DAC
 		DAC1->DHR12R1 = potValRaw;
 		// Refresh OLED
-		// refresh_OLED();
-		trace_printf("Pot Res: %d ohms  DAC output is: %f V\n", potValResistance,potValVoltage);
+		//refresh_OLED();
+		trace_printf("Pot Res: %d ohms  DAC output is: %f V\n", Res,potValVoltage);
 	}
 
 	return 0;
@@ -501,7 +503,7 @@ void oled_config( void )
 		oled_Write_Data(0x00);
 	}
    }
-    
+
 
 
 }
@@ -600,11 +602,11 @@ void myGPIOA_Init()
 void myTIM3_Init(){
 	// Enable TIM3 clock
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-	/* TIM3 Configuration: 
+	/* TIM3 Configuration:
 		-Auto-reload disabled. Using it as a one shot timer
 		-Count Down mode. Starting value will be the delay desired
 		-CEN:0 Counter is not enabled
-		-UDIS:0 Enable update event. 
+		-UDIS:0 Enable update event.
 		-URS:1 Only underflow generated an update interrut
 		-!OPM:1 One Pulse Mode. Counter stops at update event. CEN is cleared
 		-DIR:1 Count down
@@ -620,7 +622,7 @@ void myTIM3_Init(){
 // TIM3 is 16bit
 // Max delay of 1.64s
 void TIM3Delay (uint16_t delay){
-	unint16_t counterVal = delay*SystemCoreClock/((myTIM3_PRESCALER+1)*1000);
+	int counterVal = delay*SystemCoreClock/((myTIM3_PRESCALER+1)*1000);
 	TIM3->ARR = counterVal;
 	// Clear UIF flag
 	TIM3->SR &= ~TIM_SR_UIF;
@@ -680,7 +682,7 @@ void myEXTI_Init()
 	// Relevant register: EXTI->IMR
 	// set EXTI IMR bit 2 (...43210) to 1 to unmask
 	EXTI->IMR |= EXTI_IMR_MR2;
-	
+
 	/* Assign EXTI2 interrupt priority = 0 in NVIC */
 	// Relevant register: NVIC->IP[2], or use NVIC_SetPriority
 	// set PA2 priority to 0 (highest priority)
@@ -782,7 +784,7 @@ void EXTI0_1_IRQHandler()
 			// Relevant register: EXTI->IMR
 			// set EXTI IMR bit 2 (...43210) to 1 to unmask
 			EXTI->IMR |= EXTI_IMR_MR2;
-		}else{	
+		}else{
 			inSig = 0;
 			//Disable EXTI2 interrupt
 			/* mask interrupts from EXTI2 line */
