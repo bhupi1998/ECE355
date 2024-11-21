@@ -323,7 +323,7 @@ main(int argc, char* argv[])
 		DAC1->DHR12R1 = potValRaw;
 		// Refresh OLED
 		//refresh_OLED();
-		trace_printf("Pot Res: %d ohms  DAC output is: %f V\n", Res,potValVoltage);
+
 	}
 
 	return 0;
@@ -377,8 +377,8 @@ void refresh_OLED( void )
 	/* Wait for ~100 ms (for example) to get ~10 frames/sec refresh rate
        - You should use TIM3 to implement this delay (e.g., via polling)
     */
-
-    TIM3Delay(100);
+	// too slow with 100
+    TIM3Delay(50);
 
 }
 
@@ -498,12 +498,54 @@ void oled_config( void )
            set starting SEG = 0
            call oled_Write_Data( 0x00 ) 128 times
     */
-   for(int PAGE=0;PAGE<8;PAGE++){
-	for(int COL = 0; COL<128; COL++ ){
+    oled_Write_Cmd(0xB0); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
 		oled_Write_Data(0x00);
 	}
-   }
-
+    oled_Write_Cmd(0xB1); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
+		oled_Write_Data(0x00);
+	}
+    oled_Write_Cmd(0xB2); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
+		oled_Write_Data(0x00);
+	}
+    oled_Write_Cmd(0xB3); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
+		oled_Write_Data(0x00);
+	}
+    oled_Write_Cmd(0xB4); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
+		oled_Write_Data(0x00);
+	}
+    oled_Write_Cmd(0xB5); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
+		oled_Write_Data(0x00);
+	}
+    oled_Write_Cmd(0xB6); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
+		oled_Write_Data(0x00);
+	}
+    oled_Write_Cmd(0xB7); // select row
+    oled_Write_Cmd(0x00); // select col lower
+    oled_Write_Cmd(0x10); // select col upper
+	for(int COL = 0; COL<129; COL++ ){
+		oled_Write_Data(0x00);
+	}
 
 
 }
