@@ -814,6 +814,7 @@ void EXTI0_1_IRQHandler()
 	// logic for button press
 
 	if((EXTI->PR & EXTI_PR_PR0)!=0){
+		for(int i = 0; i<500000; i++){} // debounce
 		if(inSig == 0){
 			inSig = 1;
 			//Disable EXTI1 interrupt
